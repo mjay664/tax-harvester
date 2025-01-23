@@ -1,7 +1,10 @@
 package in.clear.tax_harvester.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.util.CollectionUtils;
 
@@ -12,10 +15,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
 @Getter
 @Setter
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class InvestmentTransactionResponseV2DTO extends InvestmentTransactionBaseDTO{
     private List<GroupedAccumulatedTransactionsDTO> investmentTransactions=new ArrayList<>();
     private BigDecimal investedAmount=BigDecimal.ZERO;
@@ -34,11 +41,22 @@ public class InvestmentTransactionResponseV2DTO extends InvestmentTransactionBas
                                    .stream().map(InvestmentTransactionBaseDTO::getCurrentAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
             navLastUpdatedAt = groupedAccumulatedTransactions
                     .stream().map(t -> t.getProduct().getReferProduct()
-                                        .getUpdated_at())
+                                        .getUpdatedAt())
                     .max(Date::compareTo).get().toString();
 
             setCurrentAmount(currentValue);
             this.investmentTransactions = groupedAccumulatedTransactions;
         }
+    }
+
+    public List<MutualFundTransactionDTO> getTransactions() {
+        if (CollectionUtils.isEmpty(investmentTransactions)) {
+            investmentTransactions = new ArrayList<>();
+        }
+        return getInvestmentTransactions().stream().map(GroupedAccumulatedTransactionsDTO::getFolios)
+                .flatMap(List::stream)
+                .map(AccumulatedMFTrxnDTO::getResultantPurchases)
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
     }
 }

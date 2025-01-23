@@ -8,6 +8,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -18,6 +19,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class GroupedAccumulatedTransactionsDTO extends InvestmentTransactionBaseDTO {
     private Product product;
     private BigDecimal currentNAV = BigDecimal.ZERO;
@@ -46,5 +48,13 @@ public class GroupedAccumulatedTransactionsDTO extends InvestmentTransactionBase
 
     public Product getProduct() {
         return product;
+    }
+
+    public List<AccumulatedMFTrxnDTO> getFolios() {
+        if (CollectionUtils.isEmpty(folios)) {
+            folios = List.of();
+        }
+
+        return folios;
     }
 }

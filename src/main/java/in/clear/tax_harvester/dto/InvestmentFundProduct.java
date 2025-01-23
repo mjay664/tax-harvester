@@ -1,5 +1,7 @@
 package in.clear.tax_harvester.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,11 +14,13 @@ import java.util.Date;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class InvestmentFundProduct {
 
     private Long id;
 
-    private Date updated_at;
+    @JsonProperty("updated_at")
+    private Date updatedAt;
 
     private String fundName;
 
@@ -50,7 +54,7 @@ public class InvestmentFundProduct {
 
     private String fundHouse;
 
-    public Date getUpdated_at() {
-        return updated_at;
-    }
+    private String isinCode;
+
+    private String fundType;
 }

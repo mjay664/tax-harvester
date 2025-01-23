@@ -1,0 +1,12 @@
+spring:
+  profiles:
+    active: local
+
+logging:
+  level:
+    org:
+      springframework: DEBUG
+      tax_harvester: DEBUG
+
+server:
+  port: 8090

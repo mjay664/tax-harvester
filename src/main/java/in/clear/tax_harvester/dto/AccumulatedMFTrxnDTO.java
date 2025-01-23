@@ -1,9 +1,11 @@
 package in.clear.tax_harvester.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -14,6 +16,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AccumulatedMFTrxnDTO extends InvestmentTransactionBaseDTO{
 
     private Product product;
@@ -73,4 +76,12 @@ public class AccumulatedMFTrxnDTO extends InvestmentTransactionBaseDTO{
     List<MutualFundTransactionDTO> resultantPurchases;
 
     private Boolean isImported;
+
+    public List<MutualFundTransactionDTO> getResultantPurchases() {
+        if (CollectionUtils.isEmpty(resultantPurchases)) {
+            resultantPurchases = List.of();
+        }
+
+        return resultantPurchases;
+    }
 }

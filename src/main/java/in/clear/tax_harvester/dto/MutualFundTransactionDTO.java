@@ -1,6 +1,8 @@
 package in.clear.tax_harvester.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRawValue;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,6 +18,7 @@ import java.util.Date;
 @Slf4j
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MutualFundTransactionDTO extends InvestmentTransactionBaseDTO{
 
     private String transactionNumber;
@@ -50,9 +53,6 @@ public class MutualFundTransactionDTO extends InvestmentTransactionBaseDTO{
 
     private String subCategory;
 
-    @JsonRawValue
-    private String fundMetaData;
-
     private String imageUrl;
 
     private Product product;
@@ -74,6 +74,22 @@ public class MutualFundTransactionDTO extends InvestmentTransactionBaseDTO{
 
     public BigDecimal getCurrentAmount() {
         return currentNav.multiply(units);
+    }
+
+    public String getIsinCode() {
+        return product.getReferProduct().getIsinCode();
+    }
+
+    public FolioTransactionData toFolioTransactionData() {
+        return FolioTransactionData.builder()
+                .transactionNumber(transactionNumber)
+                .nav(nav)
+                .units(availableUnits)
+                .investedAmount(amount)
+                .investmentDate(transactionDate)
+                .currentNav(currentNav)
+                .currentAmount(currentAmount)
+                .build();
     }
 
 }

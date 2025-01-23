@@ -16,6 +16,8 @@ import java.util.List;
 public class FundFolioData {
     private String fundName;
 
+    private String isinCode;
+
     private BigDecimal currentAmount;
 
     private BigDecimal investedAmount;
