@@ -8,6 +8,7 @@ import in.clear.tax_harvester.dto.MutualFundTransactionDTO;
 import in.clear.tax_harvester.dto.Product;
 import in.clear.tax_harvester.service.PortfolioService;
 import in.clear.tax_harvester.utils.FractionalOwnershipOptimisationStrategyUtil;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -18,14 +19,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class PortfolioServiceImpl implements PortfolioService {
 
     private final SaveFeignClient saveFeignClient;
-
-
-    public PortfolioServiceImpl(SaveFeignClient saveFeignClient) {
-        this.saveFeignClient = saveFeignClient;
-    }
 
     @Override
     public FolioDataResponse getFolioData(String email) {
