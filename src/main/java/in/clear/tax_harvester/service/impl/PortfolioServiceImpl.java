@@ -7,13 +7,14 @@ import in.clear.tax_harvester.dto.FundFolioData;
 import in.clear.tax_harvester.dto.MutualFundTransactionDTO;
 import in.clear.tax_harvester.dto.Product;
 import in.clear.tax_harvester.service.PortfolioService;
+import in.clear.tax_harvester.utils.FractionalOwnershipOptimisationStrategyUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,9 +33,11 @@ public class PortfolioServiceImpl implements PortfolioService {
 
         var transactions = saveResponse.getResponse().getTransactions();
 
+        var fundFolioDataList = consolidateTransactions(transactions);
 
+        var folioDataResponse = new FolioDataResponse(fundFolioDataList);
 
-        return null;
+        return FractionalOwnershipOptimisationStrategyUtil.getOptimisedStockSellingOrder(folioDataResponse);
     }
 
     private List<FundFolioData> consolidateTransactions(List<MutualFundTransactionDTO> transactions) {
@@ -44,30 +47,40 @@ public class PortfolioServiceImpl implements PortfolioService {
 
         Map<Product, List<MutualFundTransactionDTO>> transactionMap = transactions.stream()
                                                                                   .collect(Collectors.groupingBy(MutualFundTransactionDTO::getProduct));
-
+        var fundFolioDataList = new ArrayList<FundFolioData>();
         for(var entry: transactionMap.entrySet()) {
             if (entry.getValue().isEmpty()) {
                 continue;
             }
 
-            var fundProduct = entry.getKey().getReferProduct();
-
-            var fundFolioData = new FundFolioData();
-
-            var fundTransactions = entry.getValue().stream()
-                                        .map(MutualFundTransactionDTO::toFolioTransactionData)
-                                        .toList();
-
-            fundFolioData.setFolioTransactionDataList(fundTransactions);
-            fundFolioData.setFundName(fundProduct.getFundName());
-            fundFolioData.setIsinCode(fundProduct.getIsinCode());
-            fundFolioData.setInvestedAmount(fundTransactions.stream()
-                                                .map(FolioTransactionData::getInvestedAmount)
-                                                .reduce(BigDecimal.ZERO, BigDecimal::add));
-
+            fundFolioDataList.add(createFundFolioData(entry.getKey(), entry.getValue()));
         }
 
 
-        return null;
+        return fundFolioDataList;
+    }
+
+    private static FundFolioData createFundFolioData(Product product, List<MutualFundTransactionDTO> mutualFundTransactionDTOS) {
+        var fundProduct = product.getReferProduct();
+
+        var fundFolioData = new FundFolioData();
+
+        var fundTransactions = mutualFundTransactionDTOS.stream()
+                                    .map(MutualFundTransactionDTO::toFolioTransactionData)
+                                    .toList();
+
+        fundFolioData.setFolioTransactionDataList(fundTransactions);
+        fundFolioData.setFundName(fundProduct.getFundName());
+        fundFolioData.setIsinCode(fundProduct.getIsinCode());
+        fundFolioData.setInvestedAmount(fundTransactions.stream()
+                                            .map(FolioTransactionData::getInvestedAmount)
+                                            .reduce(BigDecimal.ZERO, BigDecimal::add));
+        fundFolioData.setCurrentAmount(fundTransactions.stream()
+                                            .map(FolioTransactionData::getCurrentAmount)
+                                            .reduce(BigDecimal.ZERO, BigDecimal::add));
+        fundFolioData.setUnits(fundTransactions.stream().map(FolioTransactionData::getUnits)
+                                            .reduce(BigDecimal.ZERO, BigDecimal::add));
+        fundFolioData.setFundType(fundProduct.getFundType());
+        return fundFolioData;
     }
 }

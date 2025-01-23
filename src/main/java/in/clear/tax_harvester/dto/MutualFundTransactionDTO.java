@@ -12,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.Objects;
+import java.util.Optional;
 
 @Data
 @Builder(toBuilder = true)
@@ -72,23 +74,20 @@ public class MutualFundTransactionDTO extends InvestmentTransactionBaseDTO{
 
     private BigDecimal availableUnits;
 
+    @Override
     public BigDecimal getCurrentAmount() {
         return currentNav.multiply(units);
-    }
-
-    public String getIsinCode() {
-        return product.getReferProduct().getIsinCode();
     }
 
     public FolioTransactionData toFolioTransactionData() {
         return FolioTransactionData.builder()
                 .transactionNumber(transactionNumber)
                 .nav(nav)
-                .units(availableUnits)
-                .investedAmount(amount)
+                .units(units)
+                .investedAmount(Optional.ofNullable(amount).orElse(BigDecimal.ZERO))
                 .investmentDate(transactionDate)
                 .currentNav(currentNav)
-                .currentAmount(currentAmount)
+                .currentAmount(getCurrentAmount())
                 .build();
     }
 

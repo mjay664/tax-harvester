@@ -1,5 +1,6 @@
 package in.clear.tax_harvester.utils;
 
+import in.clear.tax_harvester.constant.FundType;
 import in.clear.tax_harvester.dto.FolioDataResponse;
 import in.clear.tax_harvester.dto.FolioTransactionData;
 import in.clear.tax_harvester.dto.FundFolioData;
@@ -8,6 +9,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static in.clear.tax_harvester.constant.FundType.EQUITY;
 
 public class UnitOwnershipOptimisationStrategyUtil {
 
@@ -22,6 +25,11 @@ public class UnitOwnershipOptimisationStrategyUtil {
         List<FundFolioData> updatedFolioDataList = new ArrayList<>();
 
         for (FundFolioData fundFolioData : folioDataResponse.getFolioDataList()) {
+            if (!FundType.isEquityRelated(fundFolioData.getFundType())) {
+                updatedFolioDataList.add(fundFolioData);
+                continue;
+            }
+
             List<FolioTransactionData> updatedTransactionDataList = new ArrayList<>();
             List<double[]> ltcgOptions = new ArrayList<>();
 
@@ -56,7 +64,7 @@ public class UnitOwnershipOptimisationStrategyUtil {
                 if (remainingLTCG <= 0) break;
             }
 
-            FundFolioData updatedFundFolioData = FundFolioData.builder()
+            FundFolioData updatedFundFolioData = fundFolioData.toBuilder()
                     .isinCode(fundFolioData.getIsinCode())
                     .fundName(fundFolioData.getFundName())
                     .units(updatedTransactionDataList.stream().map(FolioTransactionData::getUnits).reduce(BigDecimal.ZERO, BigDecimal::add))
@@ -67,6 +75,7 @@ public class UnitOwnershipOptimisationStrategyUtil {
 
             updatedFolioDataList.add(updatedFundFolioData);
         }
+
         return FolioDataResponse.builder().folioDataList(updatedFolioDataList).build();
     }
 
