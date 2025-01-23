@@ -12,7 +12,7 @@ public interface FundType {
     String GOLD = "GOLD";
     String INDEX = "INDEX";
 
-    static boolean isEquityRelated(String fundType) {
-        return Set.of(EQUITY, ELSS, INDEX).contains(fundType.toUpperCase(Locale.ROOT));
+    static boolean isDebtRelated(String fundType) {
+        return !Set.of(EQUITY, ELSS, INDEX).contains(fundType.toUpperCase(Locale.ROOT));
     }
 }

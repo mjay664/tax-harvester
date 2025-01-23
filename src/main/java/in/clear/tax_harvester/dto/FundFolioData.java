@@ -3,6 +3,7 @@ package in.clear.tax_harvester.dto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import in.clear.tax_harvester.constant.FundType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -44,4 +45,9 @@ public class FundFolioData {
     // Data after calculating optimisations
     private Double profit;
     private Double amountToSell;
+
+    @JsonIgnore
+    public boolean isELSS() {
+        return FundType.ELSS.equalsIgnoreCase(fundType);
+    }
 }

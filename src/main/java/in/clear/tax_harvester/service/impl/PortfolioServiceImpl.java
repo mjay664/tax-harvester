@@ -69,7 +69,7 @@ public class PortfolioServiceImpl implements PortfolioService {
                                     .map(MutualFundTransactionDTO::toFolioTransactionData)
                                     .toList();
 
-        fundFolioData.setFolioTransactionDataList(fundTransactions);
+        fundFolioData.setFolioTransactionDataList(new ArrayList<>(fundTransactions));
         fundFolioData.setFundName(fundProduct.getFundName());
         fundFolioData.setIsinCode(fundProduct.getIsinCode());
         fundFolioData.setInvestedAmount(fundTransactions.stream()
