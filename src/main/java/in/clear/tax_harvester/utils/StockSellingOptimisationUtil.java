@@ -45,6 +45,7 @@ public class StockSellingOptimisationUtil {
                 if (unitsToSell > 0) {
                     FolioTransactionData updatedTransaction = FolioTransactionData.builder()
                             .units(BigDecimal.valueOf(unitsToSell))
+                            .profit(String.valueOf(ltcgPerUnit * unitsToSell))
                             .build();
 
                     updatedTransactionDataList.add(updatedTransaction);
@@ -57,6 +58,7 @@ public class StockSellingOptimisationUtil {
             FundFolioData updatedFundFolioData = FundFolioData.builder()
                     .units(updatedTransactionDataList.stream().map(FolioTransactionData::getUnits).reduce(BigDecimal.ZERO, BigDecimal::add))
                     .folioTransactionDataList(updatedTransactionDataList)
+                    .profit(updatedTransactionDataList.stream().map(FolioTransactionData::getProfit).mapToDouble(Double::parseDouble).sum())
                     .build();
 
             updatedFolioDataList.add(updatedFundFolioData);

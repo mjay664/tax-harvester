@@ -27,4 +27,6 @@ public class FolioTransactionData {
     private BigDecimal currentAmount;
 
     private String transactionNumber;
+
+    private String profit;
 }

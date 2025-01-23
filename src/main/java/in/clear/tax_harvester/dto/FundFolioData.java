@@ -29,4 +29,6 @@ public class FundFolioData {
     private BigDecimal suggestedRedemptionAmount;
 
     private List<FolioTransactionData> folioTransactionDataList;
+
+    private Double profit;
 }
