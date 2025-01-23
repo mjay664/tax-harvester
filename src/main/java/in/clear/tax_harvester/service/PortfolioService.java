@@ -1,5 +1,7 @@
 package in.clear.tax_harvester.service;
 
-public interface PortfolioService {
+import in.clear.tax_harvester.dto.FolioDataResponse;
 
+public interface PortfolioService {
+    FolioDataResponse getFolioData(String email);
 }

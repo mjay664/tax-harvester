@@ -73,7 +73,7 @@ public class MutualFundTransactionDTO extends InvestmentTransactionBaseDTO{
     private BigDecimal availableUnits;
 
     public BigDecimal getCurrentAmount() {
-        return getCurrentNav().multiply(getUnits());
+        return currentNav.multiply(units);
     }
 
 }

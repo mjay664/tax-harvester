@@ -1,17 +1,24 @@
 package in.clear.tax_harvester.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 
-@Getter
-@Setter
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class GroupedAccumulatedTransactionsDTO extends InvestmentTransactionBaseDTO{
+@EqualsAndHashCode(callSuper = true)
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class GroupedAccumulatedTransactionsDTO extends InvestmentTransactionBaseDTO {
     private Product product;
     private BigDecimal currentNAV = BigDecimal.ZERO;
     private BigDecimal currentUnits = BigDecimal.ZERO;
@@ -31,5 +38,13 @@ public class GroupedAccumulatedTransactionsDTO extends InvestmentTransactionBase
     public GroupedAccumulatedTransactionsDTO(Product product, List<AccumulatedMFTrxnDTO> folios) {
         this.product = product;
         this.folios = folios;
+    }
+
+    public BigDecimal getInvestedAmount() {
+        return investedAmount;
+    }
+
+    public Product getProduct() {
+        return product;
     }
 }

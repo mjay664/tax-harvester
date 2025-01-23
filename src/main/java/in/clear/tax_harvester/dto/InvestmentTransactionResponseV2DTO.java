@@ -28,21 +28,16 @@ public class InvestmentTransactionResponseV2DTO extends InvestmentTransactionBas
 
     public InvestmentTransactionResponseV2DTO(List<GroupedAccumulatedTransactionsDTO> groupedAccumulatedTransactions){
         if(Objects.nonNull(groupedAccumulatedTransactions) && !CollectionUtils.isEmpty(groupedAccumulatedTransactions)) {
-            investedAmount = Optional.ofNullable(groupedAccumulatedTransactions).orElseGet(Collections::emptyList)
-                    .stream().map(t -> t.getInvestedAmount()).reduce(BigDecimal.ZERO, BigDecimal::add);
-            currentValue = Optional.ofNullable(groupedAccumulatedTransactions).orElseGet(Collections::emptyList)
-                    .stream().map(t -> t.getCurrentAmount()).reduce(BigDecimal.ZERO, BigDecimal::add);
-            redeemedValue = Optional.ofNullable(groupedAccumulatedTransactions).orElseGet(Collections::emptyList)
-                    .stream().map(t -> t.getRedeemedAmount()).reduce(BigDecimal.ZERO, BigDecimal::add);
-            dividendAmount = Optional.ofNullable(groupedAccumulatedTransactions).orElseGet(Collections::emptyList)
-                    .stream().map(t -> t.getDividendAmount()).reduce(BigDecimal.ZERO, BigDecimal::add);
+            investedAmount = Optional.of(groupedAccumulatedTransactions).orElseGet(Collections::emptyList)
+                                     .stream().map(GroupedAccumulatedTransactionsDTO::getInvestedAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+            currentValue = Optional.of(groupedAccumulatedTransactions).orElseGet(Collections::emptyList)
+                                   .stream().map(InvestmentTransactionBaseDTO::getCurrentAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
             navLastUpdatedAt = groupedAccumulatedTransactions
-                    .stream().map(t -> ((InvestmentFundProduct) t.getProduct().getReferProduct()).getUpdated_at())
+                    .stream().map(t -> t.getProduct().getReferProduct()
+                                        .getUpdated_at())
                     .max(Date::compareTo).get().toString();
-            returnValue = currentValue.subtract(investedAmount);
-            returnPercentage = investedAmount.compareTo(BigDecimal.ZERO) > 0 ? returnValue.divide(investedAmount, 4).multiply(new BigDecimal(100)) : BigDecimal.ZERO;
+
             setCurrentAmount(currentValue);
-            setDividendAmount(dividendAmount);
             this.investmentTransactions = groupedAccumulatedTransactions;
         }
     }

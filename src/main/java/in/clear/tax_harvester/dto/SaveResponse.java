@@ -9,12 +9,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Product {
-    private Long id;
-
-    private InvestmentFundProduct referProduct;
-
-    public InvestmentFundProduct getReferProduct() {
-        return referProduct;
-    }
+public class SaveResponse {
+    private InvestmentTransactionResponseV2DTO response;
 }

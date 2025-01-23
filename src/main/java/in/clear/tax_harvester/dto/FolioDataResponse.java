@@ -1,20 +1,17 @@
 package in.clear.tax_harvester.dto;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Product {
-    private Long id;
-
-    private InvestmentFundProduct referProduct;
-
-    public InvestmentFundProduct getReferProduct() {
-        return referProduct;
-    }
+public class FolioDataResponse {
+    private List<FundFolioData> folioDataList;
 }
