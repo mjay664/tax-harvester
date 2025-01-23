@@ -12,18 +12,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/tax-harvester")
+@RequiredArgsConstructor
 public class PortfolioController {
 
-        private final PortfolioService portfolioService;
-
-    @Autowired
-    public PortfolioController(PortfolioService portfolioService) {
-        this.portfolioService = portfolioService;
-    }
-
+    private final PortfolioService portfolioService;
 
     @GetMapping("/{email}/folio")
-        public FolioDataResponse getFolio(@PathVariable("email") String email) {
-            return portfolioService.getFolioData(email);
-        }
+    public FolioDataResponse getFolio(@PathVariable("email") String email) {
+        return portfolioService.getFolioData(email);
+    }
 }
