@@ -4,7 +4,9 @@ import in.clear.tax_harvester.client.SaveFeignClient;
 import in.clear.tax_harvester.dto.FolioDataResponse;
 import in.clear.tax_harvester.dto.FolioTransactionData;
 import in.clear.tax_harvester.dto.FundFolioData;
+import in.clear.tax_harvester.dto.GraphResponseDTO;
 import in.clear.tax_harvester.dto.MutualFundTransactionDTO;
+import in.clear.tax_harvester.dto.OptimisationSuggestionResponse;
 import in.clear.tax_harvester.dto.Product;
 import in.clear.tax_harvester.service.PortfolioService;
 import in.clear.tax_harvester.utils.FractionalOwnershipOptimisationStrategyUtil;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 public class PortfolioServiceImpl implements PortfolioService {
 
     private final SaveFeignClient saveFeignClient;
+    private final GraphServiceImpl graphService;
 
     @Override
     public FolioDataResponse getFolioData(String email) {
@@ -35,6 +38,23 @@ public class PortfolioServiceImpl implements PortfolioService {
         var folioDataResponse = new FolioDataResponse(fundFolioDataList);
 
         return FractionalOwnershipOptimisationStrategyUtil.getOptimisedStockSellingOrder(folioDataResponse);
+    }
+
+    @Override
+    public OptimisationSuggestionResponse getOptimisationSuggestion(String email, String pan, int years) {
+
+        var saveResponse = saveFeignClient.getInvestmentTransactionResponse(email);
+        var transactions = saveResponse.getResponse().getTransactions();
+        var fundFolioDataList = consolidateTransactions(transactions);
+        var folioDataResponse = new FolioDataResponse(fundFolioDataList);
+        GraphResponseDTO graphResponseDTO = graphService.getGraphData(folioDataResponse, years);
+
+
+        return OptimisationSuggestionResponse
+                .builder()
+                .folioDataResponse(folioDataResponse)
+                .graphResponseDTO(graphResponseDTO)
+                .build();
     }
 
     private List<FundFolioData> consolidateTransactions(List<MutualFundTransactionDTO> transactions) {
