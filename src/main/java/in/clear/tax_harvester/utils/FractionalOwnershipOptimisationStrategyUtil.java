@@ -4,6 +4,7 @@ import in.clear.tax_harvester.constant.FundType;
 import in.clear.tax_harvester.dto.FolioDataResponse;
 import in.clear.tax_harvester.dto.FolioTransactionData;
 import in.clear.tax_harvester.dto.FundFolioData;
+import in.clear.tax_harvester.dto.TransactionData;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -34,7 +35,7 @@ public class FractionalOwnershipOptimisationStrategyUtil {
             }
 
             List<FolioTransactionData> updatedTransactionDataList = new ArrayList<>();
-            List<double[]> ltcgOptions = new ArrayList<>();
+            List<TransactionData> ltcgOptions = new ArrayList<>();
 
             fundFolioData.getFolioTransactionDataList().sort(Comparator.comparing(FolioTransactionData::getInvestmentDate));
             for (FolioTransactionData folioTransactionData : fundFolioData.getFolioTransactionDataList()) {
@@ -44,15 +45,22 @@ public class FractionalOwnershipOptimisationStrategyUtil {
                     double ltcgPerUnit = folioTransactionData.getCurrentNav().subtract(buyPricePerUnit).doubleValue();
                     var isLtcgApplicable = isLtcgApplicable(fundFolioData, folioTransactionData, ltcgPerUnit, currentTimeMillis);
                     if(isLtcgApplicable) {
-                        ltcgOptions.add(new double[]{ltcgPerUnit, folioTransactionData.getUnits().doubleValue(), folioTransactionData.getCurrentNav().doubleValue()});
+                        TransactionData transactionData = TransactionData.builder()
+                                .ltcgPerUnit(ltcgPerUnit)
+                                .units(folioTransactionData.getUnits().doubleValue())
+                                .currentNav(folioTransactionData.getCurrentNav().doubleValue())
+                                .transactionNumber(folioTransactionData.getTransactionNumber())
+                                .investmentDate(folioTransactionData.getInvestmentDate())
+                                .build();
+                        ltcgOptions.add(transactionData);
                     }
                 }
             }
 
-            for (double[] option : ltcgOptions) {
-                double ltcgPerUnit = option[0];
-                double unitsAvailable = option[1];
-                double currentNav = option[2];
+            for (TransactionData option : ltcgOptions) {
+                double ltcgPerUnit = option.getLtcgPerUnit();
+                double unitsAvailable = option.getUnits();
+                double currentNav = option.getCurrentNav();
 
                 double unitsToSell = Math.min(unitsAvailable, remainingLTCG / ltcgPerUnit);
                 if (unitsToSell > 0) {
@@ -60,6 +68,8 @@ public class FractionalOwnershipOptimisationStrategyUtil {
                             .units(BigDecimal.valueOf(unitsToSell).setScale(2, BigDecimal.ROUND_HALF_UP))
                             .profit(ltcgPerUnit * unitsToSell)
                             .amountToSell(unitsToSell * currentNav)
+                            .transactionNumber(option.getTransactionNumber())
+                            .investmentDate(option.getInvestmentDate())
                             .build();
 
                     updatedTransactionDataList.add(updatedTransaction);
@@ -69,6 +79,7 @@ public class FractionalOwnershipOptimisationStrategyUtil {
                 if (remainingLTCG <= 0) break;
             }
 
+            updatedTransactionDataList.sort(Comparator.comparing(FolioTransactionData::getInvestmentDate));
             FundFolioData updatedFundFolioData = fundFolioData.toBuilder()
                     .isinCode(fundFolioData.getIsinCode())
                     .fundName(fundFolioData.getFundName())
