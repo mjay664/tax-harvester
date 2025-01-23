@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class StockSellingOptimisationUtil {
+public class UnitOwnershipOptimisationStrategyUtil {
 
     private final static double targetLTCG = 125000.0;
     private final static long oneYearMillis = 365L * 24 * 60 * 60 * 1000;
