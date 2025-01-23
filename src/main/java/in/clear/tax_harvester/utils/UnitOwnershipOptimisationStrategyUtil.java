@@ -45,7 +45,8 @@ public class UnitOwnershipOptimisationStrategyUtil {
                 if (unitsToSell > 0) {
                     FolioTransactionData updatedTransaction = FolioTransactionData.builder()
                             .units(BigDecimal.valueOf(unitsToSell))
-                            .profit(String.valueOf(ltcgPerUnit * unitsToSell))
+                            .profit(ltcgPerUnit * unitsToSell)
+                            .amountToSell(unitsToSell * fundFolioData.getNav().doubleValue())
                             .build();
 
                     updatedTransactionDataList.add(updatedTransaction);
@@ -60,7 +61,8 @@ public class UnitOwnershipOptimisationStrategyUtil {
                     .fundName(fundFolioData.getFundName())
                     .units(updatedTransactionDataList.stream().map(FolioTransactionData::getUnits).reduce(BigDecimal.ZERO, BigDecimal::add))
                     .folioTransactionDataList(updatedTransactionDataList)
-                    .profit(updatedTransactionDataList.stream().map(FolioTransactionData::getProfit).mapToDouble(Double::parseDouble).sum())
+                    .profit(updatedTransactionDataList.stream().map(FolioTransactionData::getProfit).mapToDouble(Double::doubleValue).sum())
+                    .amountToSell(updatedTransactionDataList.stream().map(FolioTransactionData::getAmountToSell).mapToDouble(Double::doubleValue).sum())
                     .build();
 
             updatedFolioDataList.add(updatedFundFolioData);

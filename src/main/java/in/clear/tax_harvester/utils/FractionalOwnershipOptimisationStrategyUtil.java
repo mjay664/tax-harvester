@@ -6,6 +6,7 @@ import in.clear.tax_harvester.dto.FundFolioData;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -33,7 +34,7 @@ public class FractionalOwnershipOptimisationStrategyUtil {
                     BigDecimal buyPricePerUnit = folioTransactionData.getNav();
                     double ltcgPerUnit = folioTransactionData.getCurrentNav().subtract(buyPricePerUnit).doubleValue();
                     if(ltcgPerUnit > 0) {
-                        ltcgOptions.add(new double[]{ltcgPerUnit, folioTransactionData.getUnits().doubleValue(), folioTransactionData.getInvestmentDate().getTime()});
+                        ltcgOptions.add(new double[]{ltcgPerUnit, folioTransactionData.getUnits().doubleValue(), folioTransactionData.getCurrentNav().doubleValue()});
                     }
                 }
             }
@@ -41,12 +42,14 @@ public class FractionalOwnershipOptimisationStrategyUtil {
             for (double[] option : ltcgOptions) {
                 double ltcgPerUnit = option[0];
                 double unitsAvailable = option[1];
+                double currentNav = option[2];
 
                 double unitsToSell = Math.min(unitsAvailable, remainingLTCG / ltcgPerUnit);
                 if (unitsToSell > 0) {
                     FolioTransactionData updatedTransaction = FolioTransactionData.builder()
                             .units(BigDecimal.valueOf(unitsToSell).setScale(2, BigDecimal.ROUND_HALF_UP))
-                            .profit(String.valueOf(ltcgPerUnit * unitsToSell))
+                            .profit(ltcgPerUnit * unitsToSell)
+                            .amountToSell(unitsToSell * currentNav)
                             .build();
 
                     updatedTransactionDataList.add(updatedTransaction);
@@ -61,7 +64,8 @@ public class FractionalOwnershipOptimisationStrategyUtil {
                     .fundName(fundFolioData.getFundName())
                     .units(updatedTransactionDataList.stream().map(FolioTransactionData::getUnits).reduce(BigDecimal.ZERO, BigDecimal::add))
                     .folioTransactionDataList(updatedTransactionDataList)
-                    .profit(updatedTransactionDataList.stream().map(FolioTransactionData::getProfit).mapToDouble(Double::parseDouble).sum())
+                    .profit(updatedTransactionDataList.stream().map(FolioTransactionData::getProfit).mapToDouble(Double::doubleValue).sum())
+                    .amountToSell(updatedTransactionDataList.stream().map(FolioTransactionData::getAmountToSell).mapToDouble(Double::doubleValue).sum())
                     .build();
 
             updatedFolioDataList.add(updatedFundFolioData);
