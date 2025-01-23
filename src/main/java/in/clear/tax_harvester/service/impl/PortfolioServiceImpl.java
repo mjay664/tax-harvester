@@ -80,6 +80,7 @@ public class PortfolioServiceImpl implements PortfolioService {
                                             .reduce(BigDecimal.ZERO, BigDecimal::add));
         fundFolioData.setUnits(fundTransactions.stream().map(FolioTransactionData::getUnits)
                                             .reduce(BigDecimal.ZERO, BigDecimal::add));
+        fundFolioData.setFundType(fundProduct.getFundType());
         return fundFolioData;
     }
 }
