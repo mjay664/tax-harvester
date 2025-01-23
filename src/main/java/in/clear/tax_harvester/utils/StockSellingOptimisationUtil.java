@@ -56,6 +56,8 @@ public class StockSellingOptimisationUtil {
             }
 
             FundFolioData updatedFundFolioData = FundFolioData.builder()
+                    .isinCode(fundFolioData.getIsinCode())
+                    .fundName(fundFolioData.getFundName())
                     .units(updatedTransactionDataList.stream().map(FolioTransactionData::getUnits).reduce(BigDecimal.ZERO, BigDecimal::add))
                     .folioTransactionDataList(updatedTransactionDataList)
                     .profit(updatedTransactionDataList.stream().map(FolioTransactionData::getProfit).mapToDouble(Double::parseDouble).sum())
