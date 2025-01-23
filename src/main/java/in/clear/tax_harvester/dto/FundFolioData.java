@@ -1,5 +1,6 @@
 package in.clear.tax_harvester.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,7 +11,7 @@ import java.util.List;
 
 
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class FundFolioData {
@@ -24,10 +25,13 @@ public class FundFolioData {
 
     private BigDecimal units;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private BigDecimal nav;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private BigDecimal currentNav;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private BigDecimal suggestedRedemptionAmount;
 
     private List<FolioTransactionData> folioTransactionDataList;
