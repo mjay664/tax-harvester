@@ -7,6 +7,7 @@ import in.clear.tax_harvester.dto.GraphDataDTO;
 import in.clear.tax_harvester.dto.GraphDataSetDTO;
 import in.clear.tax_harvester.dto.GraphResponseDTO;
 import in.clear.tax_harvester.service.GraphService;
+import in.clear.tax_harvester.utils.FractionalOwnershipOptimisationStrategyUtil;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -15,6 +16,11 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Collectors;
 
 public class GraphServiceImpl implements GraphService {
@@ -70,80 +76,101 @@ public class GraphServiceImpl implements GraphService {
                 .build();
     }
 
-    public GraphDataSetDTO generateDataSetForOurStrategy(FolioDataResponse folioDataResponse, int years) {
-        return null;
-    }
-
-
-    public GraphDataSetDTO generateDataSetForOurStrategy2(List<FolioTransactionData> currentTrxns, int years) {
+    public GraphDataSetDTO generateDataSetForOurStrategy(FolioDataResponse currentFolio, int years) {
         List<GraphDataDTO> data = new ArrayList<>();
-        BigDecimal totalTaxSaved = BigDecimal.ZERO;
-        BigDecimal totalProfitBooked = BigDecimal.ZERO;
 
         for (int year = 0; year < years; year++) {
-            BigDecimal annualProfitBooked = BigDecimal.ZERO;
-            BigDecimal annualTaxSaved = BigDecimal.ZERO;
-            List<FolioTransactionData> newTransactions = new ArrayList<>();
+            FolioDataResponse sellOrdersFolio = FractionalOwnershipOptimisationStrategyUtil.getOptimisedStockSellingOrder(currentFolio);
+            BigDecimal totalProfit = getTotalProfitAfterSellingAll(currentFolio);
+            BigDecimal tax = totalProfit.subtract(EXEMPTION_LIMIT).multiply(TAX_RATE);
+            BigDecimal totalTaxLiability = tax.max(BigDecimal.ZERO);
+            data.add(new GraphDataDTO("Year " + year, totalTaxLiability, totalProfit));
 
-            for (int i = 0; i < currentTrxns.size(); i++) {
-                FolioTransactionData transaction = currentTrxns.get(i);
-                BigDecimal initialNav = transaction.getNav();
-                BigDecimal units = transaction.getUnits();
-                BigDecimal currentNav = initialNav.multiply(BigDecimal.ONE.add(ANNUAL_GROWTH_RATE).pow(year + 1));
-                BigDecimal currentValue = currentNav.multiply(units).setScale(2, RoundingMode.HALF_UP);
-                BigDecimal potentialProfit = currentValue.subtract(transaction.getInvestedAmount());
-
-                if (annualProfitBooked.compareTo(EXEMPTION_LIMIT) < 0 && potentialProfit.compareTo(BigDecimal.ZERO) > 0) {
-                    BigDecimal requiredProfit = EXEMPTION_LIMIT.subtract(annualProfitBooked);
-                    BigDecimal unitsToSell = requiredProfit.divide(currentNav.subtract(initialNav), RoundingMode.HALF_UP).min(units);
-                    BigDecimal profitFromUnits = unitsToSell.multiply(currentNav.subtract(initialNav));
-
-                    // Update the annual profit booked and the tax liability
-                    if (unitsToSell.compareTo(BigDecimal.ZERO) > 0) {
-                        annualProfitBooked = annualProfitBooked.add(profitFromUnits);
-                        BigDecimal taxLiability = profitFromUnits.multiply(TAX_RATE);
-                        annualTaxSaved = annualTaxSaved.add(taxLiability);
-                    }
-
-                    // Determine the remaining units
-                    BigDecimal remainingUnits = units.subtract(unitsToSell);
-
-                    if (remainingUnits.compareTo(BigDecimal.ZERO) > 0) {
-                        // Update the transaction
-                        transaction.setUnits(remainingUnits);
-                    } else {
-                        // Completely sold, remove it from the list
-                        currentTrxns.remove(i);
-                        i--; // Adjust index since we remove an element
-                    }
-
-                    // Add new transaction for repurchased units only if we sold some units
-                    if (unitsToSell.compareTo(BigDecimal.ZERO) > 0) {
-                        FolioTransactionData newTransaction = new FolioTransactionData();
-                        newTransaction.setInvestmentDate(new Date());
-                        newTransaction.setInvestedAmount(unitsToSell.multiply(currentNav));
-                        newTransaction.setUnits(unitsToSell);
-                        newTransaction.setNav(currentNav);
-                        newTransactions.add(newTransaction);
-                    }
-                }
-            }
-
-            currentTrxns.addAll(newTransactions);
-
-            totalProfitBooked = totalProfitBooked.add(annualProfitBooked);
-            totalTaxSaved = totalTaxSaved.add(annualTaxSaved);
-
-            data.add(new GraphDataDTO("Year " + (year + 1), annualTaxSaved, annualProfitBooked));
+            updateFolioData(currentFolio, sellOrdersFolio, year);
+            updateFolioForNextYear(currentFolio);
         }
+        return new GraphDataSetDTO(data, "Our Strategy (Tax Liabilities)");
+    }
 
-        return new GraphDataSetDTO(data,"Our Strategy (Tax Liabilities Saved)");
+    private void updateFolioForNextYear(FolioDataResponse currentFolio) {
+        for (FundFolioData folioData : currentFolio.getFolioDataList()) {
+            folioData.getFolioTransactionDataList().stream().peek(trx -> {
+                trx.setCurrentAmount(trx.getCurrentAmount().multiply(BigDecimal.ONE.add(ANNUAL_GROWTH_RATE)));
+                trx.setCurrentNav(trx.getCurrentNav().multiply(BigDecimal.ONE.add(ANNUAL_GROWTH_RATE)));
+            });
+        }
+    }
+
+    private void updateFolioData(FolioDataResponse currentFolio, FolioDataResponse sellOrdersFolio, int year) {
+
+        Map<String, List<FolioTransactionData>> isisnToSellTrxnsMap = sellOrdersFolio.getFolioDataList().stream()
+                .collect(Collectors.toMap(FundFolioData::getIsinCode, FundFolioData::getFolioTransactionDataList));
+
+        for (int i = 0; i < currentFolio.getFolioDataList().size(); i++) {
+            FundFolioData currentFund = currentFolio.getFolioDataList().get(i);
+            List<FolioTransactionData> sellTrxns = isisnToSellTrxnsMap.get(currentFund.getIsinCode());
+            Map<String, FolioTransactionData> sellTrxnsMap = sellTrxns.stream().collect(Collectors.toMap(FolioTransactionData::getTransactionNumber, Function.identity()));
+           for (int j = 0; j < currentFolio.getFolioDataList().get(i).getFolioTransactionDataList().size(); j++) {
+                FolioTransactionData trx = currentFund.getFolioTransactionDataList().get(j);
+                FolioTransactionData sellTrxn = sellTrxnsMap.get(trx.getTransactionNumber());
+
+                if (Objects.isNull(sellTrxn)) {
+                    continue;
+                }
+
+               if (trx.getUnits().equals(sellTrxn.getUnits())) {
+                   Date buyDate = trx.getInvestmentDate();
+                   trx.setInvestmentDate(new Date(System.currentTimeMillis() + (1000L * 60 * 60 * 24 * 365 * year)));
+
+                   int yearsDiff = (int) ((trx.getInvestmentDate().getTime() - buyDate.getTime()) / (1000L * 60 * 60 * 24 * 365));
+
+                   trx.setNav(trx.getNav().multiply(BigDecimal.ONE.add(ANNUAL_GROWTH_RATE).pow(yearsDiff)));
+                   trx.setCurrentNav(trx.getNav());
+                   trx.setCurrentAmount(trx.getUnits().multiply(trx.getCurrentNav()));
+                   trx.setInvestedAmount(trx.getUnits().multiply(trx.getNav()));
+                   trx.setTransactionNumber(UUID.randomUUID().toString());
+               } else {
+                   Date buyDate = trx.getInvestmentDate();
+                   int yearsDiff = (int) ((trx.getInvestmentDate().getTime() - buyDate.getTime()) / (1000L * 60 * 60 * 24 * 365));
+
+                   FolioTransactionData newTrxn = FolioTransactionData.builder()
+                           .investmentDate(new Date(System.currentTimeMillis() + (1000L * 60 * 60 * 24 * 365 * year)))
+                           .investedAmount(BigDecimal.valueOf(sellTrxn.getAmountToSell()))
+                           .units(sellTrxn.getUnits())
+                           .nav(trx.getNav().multiply(BigDecimal.ONE.add(ANNUAL_GROWTH_RATE).pow(yearsDiff)))
+                           .currentNav(trx.getNav().multiply(BigDecimal.ONE.add(ANNUAL_GROWTH_RATE).pow(yearsDiff)))
+                           .currentAmount(BigDecimal.valueOf(sellTrxn.getAmountToSell()))
+                            .transactionNumber(UUID.randomUUID().toString())
+                           .build();
+
+                   trx.setUnits(trx.getUnits().subtract(sellTrxn.getUnits()));
+                   trx.setInvestedAmount(trx.getUnits().multiply(trx.getNav()));
+                   trx.setCurrentAmount(trx.getUnits().multiply(trx.getCurrentNav()));
+
+                   currentFund.getFolioTransactionDataList().add(newTrxn);
+               }
+           }
+        }
+    }
+
+    private BigDecimal getTotalProfitAfterSellingAll(FolioDataResponse currentFolio) {
+        List<FolioTransactionData> currentTrxns =
+                currentFolio.getFolioDataList().stream().map(FundFolioData::getFolioTransactionDataList).flatMap(List::stream).collect(Collectors.toList());
+        currentTrxns.sort(Comparator.comparing(FolioTransactionData::getInvestmentDate));
+
+        BigDecimal totalProfit = BigDecimal.ZERO;
+        for (int i = 0; i < currentTrxns.size(); i++) {
+            FolioTransactionData trx = currentTrxns.get(i);
+            BigDecimal profit = trx.getCurrentAmount().subtract(trx.getInvestedAmount());
+            totalProfit = totalProfit.add(profit);
+        }
+        return totalProfit;
     }
 
 
     public static void main(String[] args) {
         // Simulation parameters
-        int simulationYears = 10;
+        int simulationYears = 20;
         String dummyEmail = "test@example.com";
         String dummyPan = "ABCDE1234F";
 
@@ -178,12 +205,16 @@ public class GraphServiceImpl implements GraphService {
         folioDataList.add(FundFolioData.builder()
                 .fundName("Fund A")
                 .isinCode("ISIN123")
+                .units(new BigDecimal("1200"))
                 .folioTransactionDataList(transactions)
+                .fundType("ELSS")
                 .build());
 
         folioDataList.add(FundFolioData.builder()
                 .fundName("Fund B")
                 .isinCode("ISIN126")
+                .fundType("ELSS")
+                .units(new BigDecimal("500"))
                 .folioTransactionDataList(transactions2)
                 .build());
 
