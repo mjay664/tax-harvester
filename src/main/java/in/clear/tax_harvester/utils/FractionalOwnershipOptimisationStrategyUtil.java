@@ -23,9 +23,13 @@ public class FractionalOwnershipOptimisationStrategyUtil {
     private final static long grandFatheringDate = 1517423400000L;
 
     public static FolioDataResponse getOptimisedStockSellingOrder(FolioDataResponse folioDataResponse) {
+        return getOptimisedStockSellingOrder(folioDataResponse, 0);
+    }
+
+    public static FolioDataResponse getOptimisedStockSellingOrder(FolioDataResponse folioDataResponse,  int year) {
         List<FundFolioData> updatedFolioDataList = new ArrayList<>();
 
-        long currentTimeMillis = System.currentTimeMillis();
+        long currentTimeMillis = System.currentTimeMillis() + year * oneYearMillis;
 
         double remainingLTCG = targetLTCG;
         for (FundFolioData fundFolioData : folioDataResponse.getFolioDataList()) {

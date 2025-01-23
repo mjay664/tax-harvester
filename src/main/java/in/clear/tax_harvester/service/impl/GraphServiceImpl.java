@@ -80,7 +80,7 @@ public class GraphServiceImpl implements GraphService {
         List<GraphDataDTO> data = new ArrayList<>();
 
         for (int year = 0; year < years; year++) {
-            FolioDataResponse sellOrdersFolio = FractionalOwnershipOptimisationStrategyUtil.getOptimisedStockSellingOrder(currentFolio);
+            FolioDataResponse sellOrdersFolio = FractionalOwnershipOptimisationStrategyUtil.getOptimisedStockSellingOrder(currentFolio, year);
             BigDecimal totalProfit = getTotalProfitAfterSellingAll(currentFolio);
             BigDecimal tax = totalProfit.subtract(EXEMPTION_LIMIT).multiply(TAX_RATE);
             BigDecimal totalTaxLiability = tax.max(BigDecimal.ZERO);
@@ -94,7 +94,7 @@ public class GraphServiceImpl implements GraphService {
 
     private void updateFolioForNextYear(FolioDataResponse currentFolio) {
         for (FundFolioData folioData : currentFolio.getFolioDataList()) {
-            folioData.getFolioTransactionDataList().stream().peek(trx -> {
+            folioData.getFolioTransactionDataList().forEach(trx -> {
                 trx.setCurrentAmount(trx.getCurrentAmount().multiply(BigDecimal.ONE.add(ANNUAL_GROWTH_RATE)));
                 trx.setCurrentNav(trx.getCurrentNav().multiply(BigDecimal.ONE.add(ANNUAL_GROWTH_RATE)));
             });
@@ -232,6 +232,7 @@ public class GraphServiceImpl implements GraphService {
         transaction.setNav(nav);
         transaction.setCurrentAmount(currentAmount);
         transaction.setCurrentNav(currentNav);
+        transaction.setTransactionNumber(UUID.randomUUID().toString());
         return transaction;
     }
 
