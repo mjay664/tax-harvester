@@ -1,6 +1,8 @@
 package in.clear.tax_harvester.service.impl;
 
+import in.clear.tax_harvester.dto.FolioDataResponse;
 import in.clear.tax_harvester.dto.FolioTransactionData;
+import in.clear.tax_harvester.dto.FundFolioData;
 import in.clear.tax_harvester.dto.GraphDataDTO;
 import in.clear.tax_harvester.dto.GraphDataSetDTO;
 import in.clear.tax_harvester.dto.GraphResponseDTO;
@@ -10,8 +12,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class GraphServiceImpl implements GraphService {
 
@@ -19,36 +23,20 @@ public class GraphServiceImpl implements GraphService {
     private static final BigDecimal EXEMPTION_LIMIT = new BigDecimal("125000");
     private static final BigDecimal TAX_RATE = new BigDecimal("0.10");
 
-
-    public GraphResponseDTO getGraphData(int years, String email, String pan) {
-        List<FolioTransactionData> initialTransactions = getEligibleTransactions(years, email, pan);
-
+    public GraphResponseDTO getGraphData(FolioDataResponse folioDataResponse, int years) {
         // Create the dataset for both strategies
         return GraphResponseDTO.builder()
                 .dataSets(List.of(
-                        generateDataSetForExistingStrategy(new ArrayList<>(initialTransactions), years),
-                        generateDataSetForOurStrategy(new ArrayList<>(initialTransactions), years)
+                        generateDataSetForExistingStrategy(folioDataResponse, years),
+                        generateDataSetForOurStrategy(folioDataResponse, years)
                 ))
                 .build();
     }
 
-    public GraphResponseDTO getGraphData(List<FolioTransactionData> initialTransactions, int years) {
-        // Create the dataset for both strategies
-        return GraphResponseDTO.builder()
-                .dataSets(List.of(
-                        generateDataSetForExistingStrategy(new ArrayList<>(initialTransactions), years),
-                        generateDataSetForOurStrategy(new ArrayList<>(initialTransactions), years)
-                ))
-                .build();
-    }
-
-    private List<FolioTransactionData> getEligibleTransactions(int time, String email, String pan) {
-        // Mock implementation - ideally gets eligible transactions from the database or service
-
-        return List.of(); // Populate with real data
-    }
-
-    private GraphDataSetDTO generateDataSetForExistingStrategy(List<FolioTransactionData> currentTrxns, int years) {
+    private GraphDataSetDTO generateDataSetForExistingStrategy(FolioDataResponse folioDataResponse, int years) {
+        List<FolioTransactionData> currentTrxns =
+                folioDataResponse.getFolioDataList().stream().map(FundFolioData::getFolioTransactionDataList).flatMap(List::stream).collect(Collectors.toList());
+        currentTrxns.sort(Comparator.comparing(FolioTransactionData::getInvestmentDate));
         List<GraphDataDTO> data = new ArrayList<>();
 
         BigDecimal totalInitialInvestment = null;
@@ -82,7 +70,7 @@ public class GraphServiceImpl implements GraphService {
                 .build();
     }
 
-    public GraphDataSetDTO generateDataSetForOurStrategy(List<FolioTransactionData> currentTrxns, int years) {
+    public GraphDataSetDTO generateDataSetForOurStrategy(FolioDataResponse folioDataResponse, int years) {
         return null;
     }
 
@@ -163,10 +151,10 @@ public class GraphServiceImpl implements GraphService {
         GraphServiceImpl graphService = new GraphServiceImpl();
 
         // Define some dummy transactions
-        List<FolioTransactionData> dummyTransactions = createDummyTransactions();
+        FolioDataResponse folioDataResponse = createDummyfolioDataResponse();
 
         // Now invoke the method under test
-        GraphResponseDTO response = graphService.getGraphData(dummyTransactions, simulationYears);
+        GraphResponseDTO response = graphService.getGraphData(folioDataResponse, simulationYears);
 
         // Check the output
         for (GraphDataSetDTO dataSet : response.getDataSets()) {
@@ -177,15 +165,31 @@ public class GraphServiceImpl implements GraphService {
         }
     }
 
-    private static List<FolioTransactionData> createDummyTransactions() {
+    private static FolioDataResponse createDummyfolioDataResponse() {
         List<FolioTransactionData> transactions = new ArrayList<>();
+        List<FolioTransactionData> transactions2 = new ArrayList<>();
 
         // Let's create some dummy transactions with various NAV, units, and invested amounts
         transactions.add(createTransaction(new BigDecimal("500"), new BigDecimal("100000"), new BigDecimal("200"), new BigDecimal("100000"), new BigDecimal("200"), 0));
-        transactions.add(createTransaction(new BigDecimal("300"), new BigDecimal("150000"), new BigDecimal("500"), new BigDecimal("165000"), new BigDecimal("550"),1));
+        transactions2.add(createTransaction(new BigDecimal("300"), new BigDecimal("150000"), new BigDecimal("500"), new BigDecimal("165000"), new BigDecimal("550"),1));
         transactions.add(createTransaction(new BigDecimal("200"), new BigDecimal("200000"), new BigDecimal("1000"), new BigDecimal("242000"), new BigDecimal("1210"),2));
 
-        return transactions;
+        List<FundFolioData> folioDataList = new ArrayList<>();
+        folioDataList.add(FundFolioData.builder()
+                .fundName("Fund A")
+                .isinCode("ISIN123")
+                .folioTransactionDataList(transactions)
+                .build());
+
+        folioDataList.add(FundFolioData.builder()
+                .fundName("Fund B")
+                .isinCode("ISIN126")
+                .folioTransactionDataList(transactions2)
+                .build());
+
+        return FolioDataResponse.builder()
+                .folioDataList(folioDataList)
+                .build();
     }
 
     private static FolioTransactionData createTransaction(BigDecimal units, BigDecimal investedAmount,
