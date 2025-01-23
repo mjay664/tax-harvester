@@ -28,7 +28,7 @@ public class StockSellingOptimisationUtil {
             for (FolioTransactionData folioTransactionData : fundFolioData.getFolioTransactionDataList()) {
                 if ((currentTimeMillis - folioTransactionData.getInvestmentDate().getTime()) >= investmentTypeToLongTermMills.get(MP)
                         && folioTransactionData.getInvestmentDate().getTime() >= grandFatheringDate) {
-                    BigDecimal buyPricePerUnit = folioTransactionData.getInvestedAmount().divide(folioTransactionData.getUnits(), BigDecimal.ROUND_HALF_UP);
+                    BigDecimal buyPricePerUnit = folioTransactionData.getNav();
                     double ltcgPerUnit = folioTransactionData.getCurrentNav().subtract(buyPricePerUnit).doubleValue();
                     ltcgOptions.add(new double[]{ltcgPerUnit, folioTransactionData.getUnits().doubleValue(), folioTransactionData.getInvestmentDate().getTime()});
                 }
