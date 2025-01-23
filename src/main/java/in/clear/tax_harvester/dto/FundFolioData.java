@@ -41,5 +41,7 @@ public class FundFolioData {
     @JsonIgnore
     private List<FolioTransactionData> folioTransactionDataList;
 
+    // Data after calculating optimisations
     private Double profit;
+    private Double amountToSell;
 }
