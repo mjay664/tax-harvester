@@ -52,4 +52,12 @@ public class FolioTransactionData {
         }
         return investedAmount;
     }
+
+    public BigDecimal getAmountToSell() {
+        if (amountToSell == null) {
+            amountToSell = BigDecimal.ZERO;
+        }
+
+        return amountToSell;
+    }
 }

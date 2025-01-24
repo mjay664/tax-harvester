@@ -30,7 +30,7 @@ public class GraphServiceImpl implements GraphService {
 
     private static final BigDecimal ANNUAL_GROWTH_RATE = new BigDecimal("0.10");
     private static final BigDecimal EXEMPTION_LIMIT = new BigDecimal("125000");
-    private static final BigDecimal TAX_RATE = new BigDecimal("0.10");
+    private static final BigDecimal TAX_RATE = new BigDecimal("0.125");
 
     public ListGraphResponseDTO getGraphData(FolioDataResponse folioDataResponse, int years) {
         // Create the dataset for both strategies
