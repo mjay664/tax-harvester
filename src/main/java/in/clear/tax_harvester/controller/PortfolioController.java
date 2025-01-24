@@ -26,7 +26,7 @@ public class PortfolioController {
     @GetMapping("/{email}/folio/optimisation")
     public OptimisationSuggestionResponse getOptimisationSuggestion(@PathVariable("email") String email,
                                                                     @RequestParam("pan") String pan,
-                                                                    @RequestParam("pan") int years) {
+                                                                    @RequestParam("years") int years) {
         return portfolioService.getOptimisationSuggestion(email, pan, years);
     }
 }

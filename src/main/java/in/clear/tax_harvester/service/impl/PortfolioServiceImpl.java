@@ -31,13 +31,7 @@ public class PortfolioServiceImpl implements PortfolioService {
     public FolioDataResponse getFolioData(String email) {
         var saveResponse = saveFeignClient.getInvestmentTransactionResponse(email);
 
-        var transactions = saveResponse.getResponse().getTransactions();
-
-        var fundFolioDataList = consolidateTransactions(transactions);
-
-        var folioDataResponse = new FolioDataResponse(fundFolioDataList);
-
-        return FractionalOwnershipOptimisationStrategyUtil.getOptimisedStockSellingOrder(folioDataResponse);
+        return FractionalOwnershipOptimisationStrategyUtil.getOptimisedStockSellingOrder(saveResponse.toFolioDataResponse());
     }
 
     @Override
@@ -47,57 +41,15 @@ public class PortfolioServiceImpl implements PortfolioService {
         var transactions = saveResponse.getResponse().getTransactions();
         var fundFolioDataList = consolidateTransactions(transactions);
         var folioDataResponse = new FolioDataResponse(fundFolioDataList);
-        ListGraphResponseDTO listGraphResponseDTO = graphService.getGraphData(folioDataResponse, years);
+        GraphResponseDTO graphResponseDTO = graphService.getGraphData(folioDataResponse, years);
 
 
         return OptimisationSuggestionResponse
                 .builder()
-                .folioDataResponse(folioDataResponse)
+                .folioDataResponse(FractionalOwnershipOptimisationStrategyUtil.getOptimisedStockSellingOrder(saveResponse.toFolioDataResponse()))
                 .listGraphResponse(listGraphResponseDTO)
                 .build();
     }
 
-    private List<FundFolioData> consolidateTransactions(List<MutualFundTransactionDTO> transactions) {
-        if (CollectionUtils.isEmpty(transactions)) {
-            return List.of();
-        }
 
-        Map<Product, List<MutualFundTransactionDTO>> transactionMap = transactions.stream()
-                                                                                  .collect(Collectors.groupingBy(MutualFundTransactionDTO::getProduct));
-        var fundFolioDataList = new ArrayList<FundFolioData>();
-        for(var entry: transactionMap.entrySet()) {
-            if (entry.getValue().isEmpty()) {
-                continue;
-            }
-
-            fundFolioDataList.add(createFundFolioData(entry.getKey(), entry.getValue()));
-        }
-
-
-        return fundFolioDataList;
-    }
-
-    private static FundFolioData createFundFolioData(Product product, List<MutualFundTransactionDTO> mutualFundTransactionDTOS) {
-        var fundProduct = product.getReferProduct();
-
-        var fundFolioData = new FundFolioData();
-
-        var fundTransactions = mutualFundTransactionDTOS.stream()
-                                    .map(MutualFundTransactionDTO::toFolioTransactionData)
-                                    .toList();
-
-        fundFolioData.setFolioTransactionDataList(new ArrayList<>(fundTransactions));
-        fundFolioData.setFundName(fundProduct.getFundName());
-        fundFolioData.setIsinCode(fundProduct.getIsinCode());
-        fundFolioData.setInvestedAmount(fundTransactions.stream()
-                                            .map(FolioTransactionData::getInvestedAmount)
-                                            .reduce(BigDecimal.ZERO, BigDecimal::add));
-        fundFolioData.setCurrentAmount(fundTransactions.stream()
-                                            .map(FolioTransactionData::getCurrentAmount)
-                                            .reduce(BigDecimal.ZERO, BigDecimal::add));
-        fundFolioData.setUnits(fundTransactions.stream().map(FolioTransactionData::getUnits)
-                                            .reduce(BigDecimal.ZERO, BigDecimal::add));
-        fundFolioData.setFundType(fundProduct.getFundType());
-        return fundFolioData;
-    }
 }
