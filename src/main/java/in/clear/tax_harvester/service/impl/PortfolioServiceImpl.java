@@ -4,7 +4,7 @@ import in.clear.tax_harvester.client.SaveFeignClient;
 import in.clear.tax_harvester.dto.FolioDataResponse;
 import in.clear.tax_harvester.dto.FolioTransactionData;
 import in.clear.tax_harvester.dto.FundFolioData;
-import in.clear.tax_harvester.dto.GraphResponseDTO;
+import in.clear.tax_harvester.dto.ListGraphResponseDTO;
 import in.clear.tax_harvester.dto.MutualFundTransactionDTO;
 import in.clear.tax_harvester.dto.OptimisationSuggestionResponse;
 import in.clear.tax_harvester.dto.Product;
@@ -47,13 +47,13 @@ public class PortfolioServiceImpl implements PortfolioService {
         var transactions = saveResponse.getResponse().getTransactions();
         var fundFolioDataList = consolidateTransactions(transactions);
         var folioDataResponse = new FolioDataResponse(fundFolioDataList);
-        GraphResponseDTO graphResponseDTO = graphService.getGraphData(folioDataResponse, years);
+        ListGraphResponseDTO listGraphResponseDTO = graphService.getGraphData(folioDataResponse, years);
 
 
         return OptimisationSuggestionResponse
                 .builder()
                 .folioDataResponse(folioDataResponse)
-                .graphResponseDTO(graphResponseDTO)
+                .listGraphResponse(listGraphResponseDTO)
                 .build();
     }
 

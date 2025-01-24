@@ -11,9 +11,6 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GraphResponseDTO {
-    private List<GraphDataSetDTO> dataSets;
-    private String xAxis;
-    private String yAxis;
-    private String title;
+public class ListGraphResponseDTO {
+    List<GraphResponseDTO> graphResponseList;
 }

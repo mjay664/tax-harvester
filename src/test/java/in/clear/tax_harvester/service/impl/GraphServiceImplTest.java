@@ -7,6 +7,7 @@ import in.clear.tax_harvester.dto.FundFolioData;
 import in.clear.tax_harvester.dto.GraphDataDTO;
 import in.clear.tax_harvester.dto.GraphDataSetDTO;
 import in.clear.tax_harvester.dto.GraphResponseDTO;
+import in.clear.tax_harvester.dto.ListGraphResponseDTO;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -28,13 +29,16 @@ class GraphServiceImplTest {
         FolioDataResponse folioDataResponse = createDummyfolioDataResponse();
 
         // Now invoke the method under test
-        GraphResponseDTO response = graphService.getGraphData(folioDataResponse, simulationYears);
+        ListGraphResponseDTO response = graphService.getGraphData(folioDataResponse, simulationYears);
 
         // Check the output
-        for (GraphDataSetDTO dataSet : response.getDataSets()) {
-            System.out.println("Strategy: " + dataSet.getLabel());
-            for (GraphDataDTO data : dataSet.getData()) {
-                System.out.println(data.getTime() + ": Tax Liability - " + data.getAmountOfTax());
+        for (GraphResponseDTO graphResponse : response.getGraphResponseList()) {
+            System.out.println("Graph: " + graphResponse.getTitle());
+            for (GraphDataSetDTO dataSet : graphResponse.getDataSets()) {
+                System.out.println("Strategy: " + dataSet.getLabel());
+                for (GraphDataDTO data : dataSet.getData()) {
+                    System.out.println(data.getTime() + " " + graphResponse.getTitle() + " " + data.getAmount());
+                }
             }
         }
 

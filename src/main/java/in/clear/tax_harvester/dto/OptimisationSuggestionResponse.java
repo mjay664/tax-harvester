@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OptimisationSuggestionResponse {
-    private GraphResponseDTO graphResponseDTO;
+    private ListGraphResponseDTO listGraphResponse;
     private FolioDataResponse folioDataResponse;
 }

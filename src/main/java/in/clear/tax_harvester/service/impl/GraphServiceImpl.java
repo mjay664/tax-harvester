@@ -6,6 +6,7 @@ import in.clear.tax_harvester.dto.FundFolioData;
 import in.clear.tax_harvester.dto.GraphDataDTO;
 import in.clear.tax_harvester.dto.GraphDataSetDTO;
 import in.clear.tax_harvester.dto.GraphResponseDTO;
+import in.clear.tax_harvester.dto.ListGraphResponseDTO;
 import in.clear.tax_harvester.service.GraphService;
 import in.clear.tax_harvester.utils.FractionalOwnershipOptimisationStrategyUtil;
 import lombok.RequiredArgsConstructor;
@@ -30,14 +31,47 @@ public class GraphServiceImpl implements GraphService {
     private static final BigDecimal EXEMPTION_LIMIT = new BigDecimal("125000");
     private static final BigDecimal TAX_RATE = new BigDecimal("0.10");
 
-    public GraphResponseDTO getGraphData(FolioDataResponse folioDataResponse, int years) {
+    public ListGraphResponseDTO getGraphData(FolioDataResponse folioDataResponse, int years) {
         // Create the dataset for both strategies
-        return GraphResponseDTO.builder()
-                .dataSets(List.of(
-                        generateDataSetForExistingStrategy(folioDataResponse, years),
-                        generateDataSetForOurStrategy(folioDataResponse, years)
-                ))
+        GraphDataSetDTO existingStrategyDataSet = generateDataSetForExistingStrategy(folioDataResponse, years);
+        GraphDataSetDTO ourStrategyDataSet = generateDataSetForOurStrategy(folioDataResponse, years);
+
+        GraphResponseDTO taxGraph = GraphResponseDTO.builder()
+                .dataSets(List.of(existingStrategyDataSet, ourStrategyDataSet))
+                .xAxis("Years")
+                .yAxis("Tax Liability")
+                .title("Tax Liability Comparison")
                 .build();
+
+        GraphResponseDTO patGraph = GraphResponseDTO.builder()
+                .dataSets(getProfitAfterTaxDatasets(existingStrategyDataSet, ourStrategyDataSet))
+                .xAxis("Years")
+                .yAxis("Profit After Tax")
+                .title("Profit After Tax Comparison")
+                .build();
+
+        return new ListGraphResponseDTO(List.of(taxGraph, patGraph));
+    }
+
+    private List<GraphDataSetDTO> getProfitAfterTaxDatasets(GraphDataSetDTO existingStrategyDataSet, GraphDataSetDTO ourStrategyDataSet) {
+        List<GraphDataDTO> profitAfterTaxExistingStrategy = new ArrayList<>();
+        List<GraphDataDTO> profitAfterTaxOurStrategy = new ArrayList<>();
+
+        for (int i = 0; i < existingStrategyDataSet.getData().size(); i++) {
+            GraphDataDTO existingStrategyData = existingStrategyDataSet.getData().get(i);
+            GraphDataDTO ourStrategyData = ourStrategyDataSet.getData().get(i);
+
+            BigDecimal profitAfterTaxExisting = existingStrategyData.getProfitBooked().subtract(existingStrategyData.getAmount());
+            BigDecimal profitAfterTaxOur = existingStrategyData.getProfitBooked().subtract(ourStrategyData.getAmount());
+
+            profitAfterTaxExistingStrategy.add(new GraphDataDTO(existingStrategyData.getTime(), profitAfterTaxExisting, null));
+            profitAfterTaxOurStrategy.add(new GraphDataDTO(ourStrategyData.getTime(), profitAfterTaxOur, null));
+        }
+
+        return List.of(
+                new GraphDataSetDTO(profitAfterTaxExistingStrategy, "Existing Strategy (Profit After Tax)"),
+                new GraphDataSetDTO(profitAfterTaxOurStrategy, "Our Strategy (Profit After Tax)")
+        );
     }
 
     private GraphDataSetDTO generateDataSetForExistingStrategy(FolioDataResponse folioDataResponse, int years) {

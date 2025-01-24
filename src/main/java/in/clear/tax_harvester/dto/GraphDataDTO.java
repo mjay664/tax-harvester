@@ -1,6 +1,7 @@
 package in.clear.tax_harvester.dto;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,6 +15,8 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class GraphDataDTO {
     private String time;
-    private BigDecimal amountOfTax;
+    private BigDecimal amount;
+
+    @JsonIgnore
     private BigDecimal profitBooked;
 }
