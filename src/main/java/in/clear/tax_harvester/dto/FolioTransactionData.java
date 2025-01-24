@@ -29,6 +29,6 @@ public class FolioTransactionData {
     private String transactionNumber;
 
     // Data after calculating optimisations
-    private Double profit;
-    private Double amountToSell;
+    private BigDecimal profit;
+    private BigDecimal amountToSell;
 }

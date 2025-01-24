@@ -42,8 +42,8 @@ public class FundFolioData {
     private List<FolioTransactionData> folioTransactionDataList;
 
     // Data after calculating optimisations
-    private Double profit;
-    private Double amountToSell;
+    private BigDecimal profit;
+    private BigDecimal amountToSell;
 
     @JsonIgnore
     public boolean isELSS() {

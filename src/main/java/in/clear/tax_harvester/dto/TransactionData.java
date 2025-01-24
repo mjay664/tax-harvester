@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 @Data
@@ -12,9 +13,9 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TransactionData {
-    private double ltcgPerUnit;
-    private double units;
-    private double currentNav;
+    private BigDecimal ltcgPerUnit;
+    private BigDecimal units;
+    private BigDecimal currentNav;
     private String transactionNumber;
     private Date investmentDate;
 }

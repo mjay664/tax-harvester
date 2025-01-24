@@ -1,5 +1,6 @@
 package in.clear.tax_harvester.service.impl;
 
+import in.clear.tax_harvester.constant.FundType;
 import in.clear.tax_harvester.dto.FolioDataResponse;
 import in.clear.tax_harvester.dto.FolioTransactionData;
 import in.clear.tax_harvester.dto.FundFolioData;
@@ -10,7 +11,6 @@ import in.clear.tax_harvester.service.GraphService;
 import in.clear.tax_harvester.utils.FractionalOwnershipOptimisationStrategyUtil;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Collectors;
 
 public class GraphServiceImpl implements GraphService {
@@ -135,11 +134,11 @@ public class GraphServiceImpl implements GraphService {
 
                    FolioTransactionData newTrxn = FolioTransactionData.builder()
                            .investmentDate(new Date(System.currentTimeMillis() + (1000L * 60 * 60 * 24 * 365 * year)))
-                           .investedAmount(BigDecimal.valueOf(sellTrxn.getAmountToSell()))
+                           .investedAmount(sellTrxn.getAmountToSell())
                            .units(sellTrxn.getUnits())
                            .nav(trx.getNav().multiply(BigDecimal.ONE.add(ANNUAL_GROWTH_RATE).pow(yearsDiff)))
                            .currentNav(trx.getNav().multiply(BigDecimal.ONE.add(ANNUAL_GROWTH_RATE).pow(yearsDiff)))
-                           .currentAmount(BigDecimal.valueOf(sellTrxn.getAmountToSell()))
+                           .currentAmount(sellTrxn.getAmountToSell())
                             .transactionNumber(UUID.randomUUID().toString())
                            .build();
 
@@ -170,7 +169,7 @@ public class GraphServiceImpl implements GraphService {
 
     public static void main(String[] args) {
         // Simulation parameters
-        int simulationYears = 20;
+        int simulationYears = 50;
         String dummyEmail = "test@example.com";
         String dummyPan = "ABCDE1234F";
 
@@ -207,13 +206,13 @@ public class GraphServiceImpl implements GraphService {
                 .isinCode("ISIN123")
                 .units(new BigDecimal("1200"))
                 .folioTransactionDataList(transactions)
-                .fundType("ELSS")
+                .fundType(FundType.EQUITY)
                 .build());
 
         folioDataList.add(FundFolioData.builder()
                 .fundName("Fund B")
                 .isinCode("ISIN126")
-                .fundType("ELSS")
+                .fundType(FundType.EQUITY)
                 .units(new BigDecimal("500"))
                 .folioTransactionDataList(transactions2)
                 .build());
