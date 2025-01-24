@@ -9,6 +9,8 @@ import in.clear.tax_harvester.dto.GraphDataSetDTO;
 import in.clear.tax_harvester.dto.GraphResponseDTO;
 import in.clear.tax_harvester.service.GraphService;
 import in.clear.tax_harvester.utils.FractionalOwnershipOptimisationStrategyUtil;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -22,6 +24,8 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Service
+@RequiredArgsConstructor
 public class GraphServiceImpl implements GraphService {
 
     private static final BigDecimal ANNUAL_GROWTH_RATE = new BigDecimal("0.10");
@@ -166,30 +170,6 @@ public class GraphServiceImpl implements GraphService {
         return totalProfit;
     }
 
-
-    public static void main(String[] args) {
-        // Simulation parameters
-        int simulationYears = 50;
-        String dummyEmail = "test@example.com";
-        String dummyPan = "ABCDE1234F";
-
-        // Instantiate the Graph service implementation
-        GraphServiceImpl graphService = new GraphServiceImpl();
-
-        // Define some dummy transactions
-        FolioDataResponse folioDataResponse = createDummyfolioDataResponse();
-
-        // Now invoke the method under test
-        GraphResponseDTO response = graphService.getGraphData(folioDataResponse, simulationYears);
-
-        // Check the output
-        for (GraphDataSetDTO dataSet : response.getDataSets()) {
-            System.out.println("Strategy: " + dataSet.getLabel());
-            for (GraphDataDTO data : dataSet.getData()) {
-                System.out.println(data.getTime() + ": Tax Liability - " + data.getAmountOfTax());
-            }
-        }
-    }
 
     private static FolioDataResponse createDummyfolioDataResponse() {
         List<FolioTransactionData> transactions = new ArrayList<>();
