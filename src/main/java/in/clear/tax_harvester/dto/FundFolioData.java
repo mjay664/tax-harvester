@@ -49,4 +49,11 @@ public class FundFolioData {
     public boolean isELSS() {
         return FundType.ELSS.equalsIgnoreCase(fundType);
     }
+
+    public BigDecimal getAmountToSell() {
+        if (amountToSell == null) {
+            amountToSell = BigDecimal.ZERO;
+        }
+        return amountToSell;
+    }
 }
