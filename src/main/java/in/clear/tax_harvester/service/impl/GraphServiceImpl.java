@@ -1,6 +1,5 @@
 package in.clear.tax_harvester.service.impl;
 
-import in.clear.tax_harvester.constant.FundType;
 import in.clear.tax_harvester.dto.FolioDataResponse;
 import in.clear.tax_harvester.dto.FolioTransactionData;
 import in.clear.tax_harvester.dto.FundFolioData;
@@ -13,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
