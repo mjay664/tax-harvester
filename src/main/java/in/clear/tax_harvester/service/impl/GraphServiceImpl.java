@@ -65,8 +65,8 @@ public class GraphServiceImpl implements GraphService {
             BigDecimal profitAfterTaxExisting = existingStrategyData.getProfitBooked().subtract(existingStrategyData.getAmount());
             BigDecimal profitAfterTaxOur = existingStrategyData.getProfitBooked().subtract(ourStrategyData.getAmount());
 
-            profitAfterTaxExistingStrategy.add(new GraphDataDTO(existingStrategyData.getTime(), profitAfterTaxExisting, null));
-            profitAfterTaxOurStrategy.add(new GraphDataDTO(ourStrategyData.getTime(), profitAfterTaxOur, null));
+            profitAfterTaxExistingStrategy.add(new GraphDataDTO(existingStrategyData.getTime(), profitAfterTaxExisting.setScale(2, RoundingMode.HALF_UP), null));
+            profitAfterTaxOurStrategy.add(new GraphDataDTO(ourStrategyData.getTime(), profitAfterTaxOur.setScale(2, RoundingMode.HALF_UP), null));
         }
 
         return List.of(
@@ -84,7 +84,7 @@ public class GraphServiceImpl implements GraphService {
         BigDecimal totalInitialInvestment = null;
         BigDecimal totalCurrentValue = null;
 
-        for (int year = 0; year < years; year++) {
+        for (int year = 0; year <= years; year++) {
             BigDecimal totalProfit = BigDecimal.ZERO;
             BigDecimal totalTaxLiability = BigDecimal.ZERO;
 
@@ -115,7 +115,7 @@ public class GraphServiceImpl implements GraphService {
     private GraphDataSetDTO generateDataSetForOurStrategy(FolioDataResponse currentFolio, int years) {
         List<GraphDataDTO> data = new ArrayList<>();
 
-        for (int year = 0; year < years; year++) {
+        for (int year = 0; year <= years; year++) {
             FolioDataResponse sellOrdersFolio = FractionalOwnershipOptimisationStrategyUtil.getOptimisedStockSellingOrder(currentFolio, year);
             BigDecimal totalProfit = getTotalProfitAfterSellingAll(currentFolio);
             BigDecimal tax = totalProfit.subtract(EXEMPTION_LIMIT).multiply(TAX_RATE);
@@ -145,7 +145,7 @@ public class GraphServiceImpl implements GraphService {
         for (int i = 0; i < currentFolio.getFolioDataList().size(); i++) {
             FundFolioData currentFund = currentFolio.getFolioDataList().get(i);
             List<FolioTransactionData> sellTrxns = isisnToSellTrxnsMap.get(currentFund.getIsinCode());
-            Map<String, FolioTransactionData> sellTrxnsMap = sellTrxns.stream().collect(Collectors.toMap(FolioTransactionData::getTransactionNumber, Function.identity()));
+            Map<String, FolioTransactionData> sellTrxnsMap = sellTrxns.stream().collect(Collectors.toMap(FolioTransactionData::getTransactionNumber, Function.identity(), (a, b) -> a));
            for (int j = 0; j < currentFolio.getFolioDataList().get(i).getFolioTransactionDataList().size(); j++) {
                 FolioTransactionData trx = currentFund.getFolioTransactionDataList().get(j);
                 FolioTransactionData sellTrxn = sellTrxnsMap.get(trx.getTransactionNumber());

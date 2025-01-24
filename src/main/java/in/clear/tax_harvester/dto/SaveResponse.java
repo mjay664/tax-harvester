@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -59,12 +60,12 @@ public class SaveResponse {
         fundFolioData.setIsinCode(fundProduct.getIsinCode());
         fundFolioData.setInvestedAmount(fundTransactions.stream()
                                                         .map(FolioTransactionData::getInvestedAmount)
-                                                        .reduce(BigDecimal.ZERO, BigDecimal::add));
+                                                        .reduce(BigDecimal.ZERO, BigDecimal::add).setScale(2, RoundingMode.HALF_UP));
         fundFolioData.setCurrentAmount(fundTransactions.stream()
                                                        .map(FolioTransactionData::getCurrentAmount)
-                                                       .reduce(BigDecimal.ZERO, BigDecimal::add));
+                                                       .reduce(BigDecimal.ZERO, BigDecimal::add).setScale(2, RoundingMode.HALF_UP));
         fundFolioData.setUnits(fundTransactions.stream().map(FolioTransactionData::getUnits)
-                                               .reduce(BigDecimal.ZERO, BigDecimal::add));
+                                               .reduce(BigDecimal.ZERO, BigDecimal::add).setScale(2, RoundingMode.HALF_UP));
         fundFolioData.setFundType(fundProduct.getFundType());
         return fundFolioData;
     }

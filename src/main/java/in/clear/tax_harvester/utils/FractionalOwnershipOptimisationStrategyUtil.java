@@ -88,8 +88,8 @@ public class FractionalOwnershipOptimisationStrategyUtil {
                     .isinCode(fundFolioData.getIsinCode())
                     .fundName(fundFolioData.getFundName())
                     .folioTransactionDataList(updatedTransactionDataList)
-                    .profit(updatedTransactionDataList.stream().map(FolioTransactionData::getProfit).reduce(BigDecimal.ZERO, BigDecimal::add))
-                    .amountToSell(updatedTransactionDataList.stream().map(FolioTransactionData::getAmountToSell).reduce(BigDecimal.ZERO, BigDecimal::add))
+                    .profit(updatedTransactionDataList.stream().map(FolioTransactionData::getProfit).reduce(BigDecimal.ZERO, BigDecimal::add).setScale(2, RoundingMode.HALF_UP))
+                    .amountToSell(updatedTransactionDataList.stream().map(FolioTransactionData::getAmountToSell).reduce(BigDecimal.ZERO, BigDecimal::add).setScale(2, RoundingMode.HALF_UP))
                     .build();
 
             updatedFolioDataList.add(updatedFundFolioData);
