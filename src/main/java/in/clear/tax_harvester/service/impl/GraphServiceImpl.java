@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -102,7 +103,7 @@ public class GraphServiceImpl implements GraphService {
             var tax = totalProfit.subtract(EXEMPTION_LIMIT).multiply(TAX_RATE);
             totalTaxLiability = tax.max(BigDecimal.ZERO);
 
-            data.add(new GraphDataDTO("Year " + year, totalTaxLiability, totalProfit));
+            data.add(new GraphDataDTO("Year " + year, totalTaxLiability.setScale(2, RoundingMode.HALF_UP), totalProfit));
         }
 
         return GraphDataSetDTO.builder()
@@ -119,7 +120,7 @@ public class GraphServiceImpl implements GraphService {
             BigDecimal totalProfit = getTotalProfitAfterSellingAll(currentFolio);
             BigDecimal tax = totalProfit.subtract(EXEMPTION_LIMIT).multiply(TAX_RATE);
             BigDecimal totalTaxLiability = tax.max(BigDecimal.ZERO);
-            data.add(new GraphDataDTO("Year " + year, totalTaxLiability, totalProfit));
+            data.add(new GraphDataDTO("Year " + year, totalTaxLiability.setScale(2, RoundingMode.HALF_UP), totalProfit));
 
             updateFolioData(currentFolio, sellOrdersFolio, year);
             updateFolioForNextYear(currentFolio);
